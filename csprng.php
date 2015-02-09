@@ -14,14 +14,14 @@
  *
  * @throws Exception
  */
-function urandom_bytes($bytesLength)
+function random_bytes($bytesLength)
 {
     if ( ! is_int($bytesLength)) {
-        throw new InvalidArgumentException('urandom_bytes() expects byte length as an integer.');
+        throw new InvalidArgumentException('random_bytes() expects byte length as an integer.');
     }
 
     if ($bytesLength < 1) {
-        throw new InvalidArgumentException('urandom_bytes() expects byte length greater than 0.');
+        throw new InvalidArgumentException('random_bytes() expects byte length greater than 0.');
     }
 
     // @todo Validate a max $bytesLength value here?
@@ -58,13 +58,13 @@ function urandom_bytes($bytesLength)
  *
  * @return string
  */
-function urandom_hex($stringLength)
+function random_hex($stringLength)
 {
     // @todo Validate $stringLength here
 
     // @todo Double check bin2hex() string length calculations
     $length = (int) round($stringLength / 2);
-    $bytes = urandom_bytes($length);
+    $bytes = random_bytes($length);
 
     $asHex = bin2hex($bytes);
 
@@ -82,11 +82,11 @@ function urandom_hex($stringLength)
  *
  * @throws Exception
  */
-function urandom_int($min, $max)
+function random_int($min, $max)
 {
     // @todo Validate $min & $max here
 
-    $bytes = urandom_bytes(256);
+    $bytes = random_bytes(256);
     // @todo Convert bytes to int somehow?
     // @todo Will seeding mt_rand with pr-bytes from urand make it cryptographically secure?
     // @todo Does seeding happen globally?
@@ -95,13 +95,13 @@ function urandom_int($min, $max)
     return mt_rand($min, $max);
 }
 
-var_dump(urandom_bytes(10));
-var_dump(urandom_bytes(15));
+var_dump(random_bytes(10));
+var_dump(random_bytes(15));
 
-var_dump(urandom_hex(10));
-var_dump(urandom_hex(15));
+var_dump(random_hex(10));
+var_dump(random_hex(15));
 
-var_dump(urandom_int(0, 99));
+var_dump(random_int(0, 99));
 
 // Just cause I like to see random output in the console...
-var_dump(hash_hmac('sha256', 'Hash browns!', urandom_bytes(256)));
+var_dump(hash_hmac('sha256', 'Hash browns!', random_bytes(256)));
