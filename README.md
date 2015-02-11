@@ -34,7 +34,17 @@ See the [proof-of-concept](https://github.com/SammyK/php-src-csprng/blob/master/
 
 I have many questions that I need to research and answer in a comprehensive manner before I'm able to [submit an RFC](https://wiki.php.net/rfc). I will post the answers here so others can learn as well.
 
-- Need to brush up on C and learn to build an extension in PHP.
+- Need to brush up on C.
+    - [Intro to C](http://www.cprogramming.com/tutorial/c/lesson1.html)
+    - [`fgets()` docs](http://www.tutorialspoint.com/c_standard_library/c_function_fgets.htm)
+- Learn to build an extension in PHP.
+    - [Intro to extensions](http://devzone.zend.com/303/extension-writing-part-i-introduction-to-php-and-zend/) from Zend
+    - [Offical docs on extensions](http://php.net/manual/en/internals2.structure.php) from php.net
+    - [Open Grock](http://lxr.php.net/) thanks Daniel R!
+    - [PHP namespace](https://github.com/ircmaxell/php-src/compare/function-autoloading-7#diff-057763e7b765a6c5c50714033fd04ff4R1) from Anthony
+    - [The `hash_password()` function](https://github.com/php/php-src/pull/191/files) from Anthony
+- How to read a file stream in PHP core.
+    - Maybe look at `fopen()` session handler or file uploads or php.ini parser?
 - Need to learn about how PHP core validates arguments in functions.
 - How to grab a stream of bytes from Window's equivalent of `/dev/urandom`?
     - [E. Smith](https://twitter.com/auroraeosrose) will help! Yay!
@@ -45,3 +55,5 @@ I have many questions that I need to research and answer in a comprehensive mann
 - Will we need to worry about `mb_string` support in core for this?
 - Will seeding `mt_rand()` with CSPRNG make it cryptographically secure?
 - Does seeding with `mt_srand()` seed `mt_rand()` globally?
+- RFC Process
+    - [Example accepted RFC](https://wiki.php.net/rfc/password_hash)
