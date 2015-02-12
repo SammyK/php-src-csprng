@@ -37,6 +37,7 @@ function random_bytes($bytesLength)
     }
 
     $stream = fopen('/dev/urandom', 'rb');
+    stream_set_read_buffer($stream, 0);
     if ( ! is_resource($stream)) {
         throw new Exception('Unable to open stream to /dev/urandom.');
     }
