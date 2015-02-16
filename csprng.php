@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Easy user-land API to retrieve an arbitrary length of
  * cryptographically secure pseudo-random bytes.
@@ -12,7 +11,7 @@
  *
  * @return string
  *
- * @throws Exception
+ * @throws Exception, InvalidArgumentException
  */
 function random_bytes($bytesLength)
 {
@@ -25,13 +24,35 @@ function random_bytes($bytesLength)
     }
 
     // @todo Validate a max $bytesLength value here?
+    
+    /**
+     * If we can safely use mcrypt, let's use mcrypt
+     */
+    if (function_exists('mcrypt_create_iv') && version_compare(PHP_VERSION, '5.3.7') >= 0) {
+        // If mcrypt_create_iv is available, it handles Windows well
+        $binaryString = mcrypt_create_iv($bytesLength, MCRYPT_DEV_URANDOM);
+        if ($binaryString !== false) {
+            return $binaryString;
+        }
+    }
+    
+    if (function_exists('openssl_random_pseudo_bytes') && version_compare(PHP_VERSION, '5.3.7') >= 0) {
+        $strong = false;
+        
+        // The $strong argument is passed by reference; we aren't telling
+        // openssl_random_pseudo_bytes not to give us strong random, we're telling
+        // it to put a boolean for whether or not a strong random source was available
+        // into the $strong variable for later validation.
+        $binaryString = openssl_random_pseudo_bytes($bytesLength, $strong);
+        if ($strong) {
+            return $binaryString;
+        }
+    }
 
     // @todo Not sure if this is an issue only in user-land
     if (ini_get('open_basedir')) {
         throw new Exception('There is an open_basedir constraint that prevents access to /dev/urandom.');
     }
-
-    // @todo Windowz???
     if ( ! is_readable('/dev/urandom')) {
         throw new Exception('Unable to read from /dev/urandom.');
     }
@@ -41,7 +62,10 @@ function random_bytes($bytesLength)
     if ( ! is_resource($stream)) {
         throw new Exception('Unable to open stream to /dev/urandom.');
     }
-
+    
+    // Disable buffering
+    stream_set_chunk_size($stream, 0);
+    
     $binaryString = fread($stream, $bytesLength);
     fclose($stream);
 
@@ -62,15 +86,18 @@ function random_bytes($bytesLength)
 function random_hex($stringLength)
 {
     // @todo Validate $stringLength here
+    if ($stringLength < 1) {
+        throw new InvalidArgumentException('random_bytes() expects byte length greater than 0.');
+    }
 
     // @todo Double check bin2hex() string length calculations
-    $length = (int) round($stringLength / 2);
-    $bytes = random_bytes($length);
+    $randomLength = ceil($stringLength / 2);
+    $bytes = random_bytes($randomLength);
 
     $asHex = bin2hex($bytes);
 
-    // @todo Not sure of mb_string support across systems
-    return mb_substr($asHex, 0, $stringLength);
+    // mb_substr is not needed on ASCII strings
+    return substr($asHex, 0, $stringLength);
 }
 
 /**
@@ -81,28 +108,54 @@ function random_hex($stringLength)
  *
  * @return int
  *
- * @throws Exception
+ * @throws Exception, InvalidArgumentException
  */
 function random_int($min, $max)
 {
-    // @todo Validate $min & $max here
+    $range = $max - $min;
+    if ($range < 1) {
+        throw new InvalidArgumentException('random_int() expects two different integers.');
+    }
 
-    $bytes = random_bytes(256);
-    // @todo Convert bytes to int somehow?
-    // @todo Will seeding mt_rand with pr-bytes from urand make it cryptographically secure?
-    // @todo Does seeding happen globally?
-    mt_srand();
+    // 7776 -> 13
+    $bits = ceil(log($range)/log(2));
 
-    return mt_rand($min, $max);
+    // 2^13 - 1 == 8191 or 0x00001111 11111111
+    $mask =  ceil(pow(2, $bits)) - 1;
+    do {
+        // Grab a random integer
+        $val = random_positive_int();
+        if ($val === FALSE) {
+            // RNG failure
+            throw new Exception("Random Number Generator failure!");
+        }
+        // Apply mask
+        $val &= $mask;
+
+        // If $val is larger than the maximum acceptable number for
+        // $min and $max, we discard and try again.
+
+    } while ($val > $range);
+    return (int) ($min + $val);
 }
 
-var_dump(random_bytes(10));
-var_dump(random_bytes(15));
 
-var_dump(random_hex(10));
-var_dump(random_hex(15));
+/**
+ * Returns pseudo-random int between 0 and PHP_INT_MAX
+ *
+ * @return int
+ */
+function random_positive_int()
+{
+    $buf = random_bytes(PHP_INT_SIZE);
+    $val = 0;
+    $i = PHP_INT_SIZE;
 
-var_dump(random_int(0, 99));
+    do {
+        $i--;
+        $val <<= 8;
+        $val |= ord($buf[$i]);
+    } while ($i != 0);
 
-// Just cause I like to see random output in the console...
-var_dump(hash_hmac('sha256', 'Hash browns!', random_bytes(256)));
+    return $val & PHP_INT_MAX;
+}
