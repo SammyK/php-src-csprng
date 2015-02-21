@@ -51,6 +51,7 @@ I have many questions that I need to research and answer in a comprehensive mann
     - [Ian Littman](https://twitter.com/iansltx) suggested checking out [CryptGenRandom](http://en.wikipedia.org/wiki/CryptGenRandom)
 - Will the `open_basedir` ini setting have to be accounted for in core?
 - Need to learn more about how binary and hex are converted.
+    - [Binary and hexadecimal number systems](https://www.khanacademy.org/math/pre-algebra/applying-math-reasoning-topic/alternate-number-bases/v/number-systems-introduction) was super helpful (base-2, base-10 & base-16)
 - Need to learn more about how to convert binary to integer.
 - Will we need to worry about `mb_string` support in core for this?
 - Will seeding `mt_rand()` with CSPRNG make it cryptographically secure?
